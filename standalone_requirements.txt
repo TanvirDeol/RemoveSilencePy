@@ -1,0 +1,9 @@
+# Requirements for standalone jumpcutter
+# Core dependencies for video processing and audio analysis
+
+moviepy==1.0.3
+numpy==1.24.3
+tqdm==4.65.0
+
+# Optional: For better performance and additional codecs
+# imageio-ffmpeg==0.4.8
