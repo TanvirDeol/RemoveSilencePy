@@ -1,22 +1,20 @@
-# Standalone Jumpcutter
+# Remove Silence from Videos
 
-A complete, self-contained Python implementation for removing silent parts from videos. This tool analyzes video audio to detect silent segments and either removes them entirely or speeds them up, creating jumpcut-style videos.
+A simple Python tool that automatically removes silent parts from videos. Perfect for cleaning up recordings, podcasts, or any video content with unwanted pauses.
 
 ## Features
 
-- **Silent Part Detection**: Automatically detects silent segments based on audio magnitude analysis
-- **Flexible Cutting**: Remove silent parts completely or speed them up
-- **Configurable Parameters**: Fine-tune silence detection thresholds and processing options
-- **Multiple Output Modes**: Cut silent parts, voiced parts, or both
-- **Progress Tracking**: Visual progress bars for long processing operations
-- **Command Line Interface**: Easy-to-use CLI with comprehensive options
+- **Automatic Silence Detection**: Analyzes audio to find silent segments
+- **Simple Usage**: Just provide an input video file
+- **Smart Defaults**: Uses sensible parameters that work for most videos
+- **Progress Tracking**: Shows progress bars during processing
+- **Clean Output**: Creates a new video with "_jumpcut" added to the filename
 
 ## Installation
 
-1. **Clone or download** the `standalone_jumpcutter.py` file
-2. **Install dependencies**:
+1. **Install dependencies**:
    ```bash
-   pip install -r standalone_requirements.txt
+   pip install -r requirements.txt
    ```
 
    Or install manually:
@@ -24,108 +22,44 @@ A complete, self-contained Python implementation for removing silent parts from 
    pip install moviepy numpy tqdm
    ```
 
+2. **Make sure FFmpeg is installed** on your system
+
 ## Usage
 
 ### Basic Usage
 
 ```bash
 # Remove silent parts from a video
-python standalone_jumpcutter.py input_video.mp4 output_video.mp4
+python remvove_silence.py input_video.mp4
 ```
 
-### Advanced Usage
+The tool will automatically:
+- Analyze the video's audio track
+- Find silent segments (pauses longer than 0.5 seconds)
+- Remove those segments
+- Save the result as `input_video_jumpcut.mp4`
+
+### Example
 
 ```bash
-# Custom silence detection thresholds
-python standalone_jumpcutter.py input.mp4 output.mp4 \
-    --magnitude-threshold 0.01 \
-    --duration-threshold 2.0
-
-# Speed up silence instead of removing it
-python standalone_jumpcutter.py input.mp4 output.mp4 \
-    --silence-speed 3
-
-# Cut both silent and voiced parts (creates two output files)
-python standalone_jumpcutter.py input.mp4 output.mp4 \
-    --cut both
-
-# Custom buffer around silence intervals
-python standalone_jumpcutter.py input.mp4 output.mp4 \
-    --space-on-edges 0.5
+python remvove_silence.py my_podcast.mp4
+# Creates: my_podcast_jumpcut.mp4
 ```
-
-### Command Line Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `input` | str | - | Input video file path |
-| `output` | str | - | Output video file path |
-| `--magnitude-threshold` | float | 0.02 | Audio magnitude threshold for silence detection |
-| `--duration-threshold` | float | 1.0 | Minimum silence duration to cut (seconds) |
-| `--failure-tolerance` | float | 0.1 | Tolerance for non-silent samples |
-| `--space-on-edges` | float | 0.2 | Buffer time around silence intervals (seconds) |
-| `--silence-speed` | int | None | Speed multiplier for silent parts (None = remove) |
-| `--min-loud-duration` | int | -1 | Minimum duration for loud parts to keep |
-| `--codec` | str | libx264 | Video codec for output |
-| `--bitrate` | str | None | Video bitrate for output |
-| `--cut` | str | silent | Type of cutting: silent, voiced, or both |
 
 ## How It Works
 
-1. **Audio Analysis**: The tool extracts audio from the video and analyzes its magnitude over time
-2. **Silence Detection**: It identifies segments where audio magnitude falls below the threshold for a specified duration
-3. **Interval Processing**: Silent intervals are identified with configurable buffer zones
-4. **Video Processing**: The video is processed to either:
-   - Remove silent parts completely (default)
-   - Speed up silent parts by a specified factor
-   - Keep only voiced parts (opposite of silent)
-5. **Output Generation**: The processed video is saved with the specified codec and settings
+1. **Audio Analysis**: Extracts audio from the video and analyzes its volume levels
+2. **Silence Detection**: Identifies segments where audio is very quiet for a sustained period
+3. **Smart Cutting**: Removes silent parts while keeping small buffer zones to avoid cutting too close to speech
+4. **Video Reconstruction**: Combines the remaining audio/video segments into a new file
 
-## Parameters Explained
+## Default Settings
 
-### Magnitude Threshold
-- **Lower values** (e.g., 0.01): More sensitive to quiet sounds, cuts more aggressively
-- **Higher values** (e.g., 0.05): Less sensitive, only cuts very quiet parts
-
-### Duration Threshold
-- **Shorter durations** (e.g., 0.5s): Cuts brief pauses and hesitations
-- **Longer durations** (e.g., 2.0s): Only cuts longer silent segments
-
-### Space on Edges
-- **Smaller values** (e.g., 0.1s): Tighter cuts around silence
-- **Larger values** (e.g., 0.5s): More conservative cuts with buffer zones
-
-### Silence Speed
-- **None**: Completely remove silent parts
-- **Integer values** (e.g., 3): Speed up silent parts by 3x
-
-## Examples
-
-### Podcast/Interview Processing
-```bash
-# Remove long pauses and "ums" from a podcast
-python standalone_jumpcutter.py podcast.mp4 podcast_clean.mp4 \
-    --magnitude-threshold 0.015 \
-    --duration-threshold 0.8 \
-    --space-on-edges 0.1
-```
-
-### Lecture/Educational Content
-```bash
-# Speed up silent parts instead of removing them
-python standalone_jumpcutter.py lecture.mp4 lecture_condensed.mp4 \
-    --silence-speed 4 \
-    --duration-threshold 1.5
-```
-
-### Music Video Processing
-```bash
-# More conservative cutting for music content
-python standalone_jumpcutter.py music_video.mp4 music_clean.mp4 \
-    --magnitude-threshold 0.05 \
-    --duration-threshold 2.0 \
-    --space-on-edges 0.3
-```
+The tool uses these sensible defaults:
+- **Silence threshold**: 2% of maximum audio level
+- **Minimum silence duration**: 0.5 seconds
+- **Buffer zones**: 0.2 seconds around each silence interval
+- **Minimum clip length**: 0.1 seconds (prevents very short clips)
 
 ## Requirements
 
@@ -141,23 +75,11 @@ python standalone_jumpcutter.py music_video.mp4 music_clean.mp4 \
 ### Common Issues
 
 1. **FFmpeg not found**: Install FFmpeg and ensure it's in your system PATH
-2. **Memory issues with large videos**: Process shorter segments or reduce video quality
-3. **Audio codec issues**: Try different audio codecs or ensure input has audio track
+2. **No audio track**: Make sure your video has an audio track
+3. **Memory issues**: For very large videos, consider processing shorter segments
 
-### Performance Tips
+### Tips
 
-- Use lower resolution videos for faster processing
-- Adjust `--duration-threshold` to reduce processing time
-- Consider using `--silence-speed` instead of complete removal for better performance
-
-## License
-
-This project is open source. Feel free to use, modify, and distribute according to your needs.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
-
-## Changelog
-
-- **v1.0.0**: Initial standalone release with core jumpcutter functionality
+- Works best with videos that have clear speech and distinct silent periods
+- For music videos or content with background music, the tool may be too aggressive
+- The output video will be shorter than the original due to removed silence
